@@ -1,0 +1,940 @@
+/*
+Daftar Ahli Waris
+Dari pihak laki laki : 
+
+ Anhli Waris = klausa
+1.Anak laki-laki = anaklakilaki
+2.Cucu laki-laki = cuculakilaki
+3.Ayah = ayah
+4.Kakek = kakek
+5.Suami = suami
+6.Saudara kandung laki-laki = saudarakandunglakilaki
+7. Saudara seayah lakilaki = saudaraseayahlakilaki
+8. saudara seibu lakilaki = saudaraseibulakilaki
+9.Anak laki-laki dari saudara kandung = anaklakilakidarisaudarakandung
+10. Anak laki-laki dari saudara seayah = anaklakilakidarisaudaraseayah
+11.Paman = paman
+12. Paman tiri = pamantiri
+13. Anak laki- laki paman = anaklakilakipaman
+14. Anak laki-laki paman tiri = anaklakilakipamantiri
+15. mu,tiq(seorang lelaki yg membebaskan budak) = tidak tersedia
+
+Dari pihak laki laki : 
+
+ Anhli Waris = klausa
+ 
+1. Ibu = ibu
+2. Anak perempuan = anakperempuan
+3. Cucu perempuan = cucuperempuan
+4. Nenek dari ibu = nenekdariibu
+5. Nenekd ari ayah = nenekdariayah
+6. Saudara perempuan sekandung = saudarakandungperempuan
+7. Saudara perempuan sebapak = saudarasebapakperempuan
+8. Saudara perempuan seibu = saudaraseibuperempuan
+9. Istri = istri
+10 Mu'tiqah = tidak tersedia
+11. buyut = tidak tersedia
+
+Tata Cara menjalankan query
+
+?- hitungwaris([predikat,predikat,predikat,predikat,...,...],AhliWaris).
+jika ada yang berjenis kelamin perempuan dan laki laki
+CONTOH
+ada anaklaki laki dan anak perempuan, maka anak perempuan didahulukan di dalam query
+?- hitungwaris([ayah,ibu,istri,,perempuan,anaklakilaki,cucuperempuan,cuculakilaki],AhliWaris).
+
+ 
+ */
+
+
+
+hitungwaris(L,BL) :-
+    hitungwaris(L,L,BL).
+hitungwaris([],_,[]).
+
+%ASHABUL FURUDH
+
+%HUKUM BAGIAN ORANGTUA
+%TIDAK PUNYA ANAK
+
+
+%Rules Ayah Ashabah
+
+%AYAH 
+
+%rules ayah jika seseorang meninggal namun tidak punya anak
+hitungwaris([ayah|L],AhliWaris,[1/2|BL]) :- 
+    		(\+ada_anak_lakilaki(AhliWaris),
+            \+ada_anak_perempuan(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules ayah jika seseorang meninggal  punya anak
+hitungwaris([ayah|L],AhliWaris,[1/6|BL]) :- 
+    		(ada_anak_lakilaki(AhliWaris); 
+             ada_anak_perempuan(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%IBU
+%rules ibu jika seseorang meninggal namun tidak punya anak
+hitungwaris([ibu|L],AhliWaris,[1/3|BL]) :- 
+    		(\+ada_anak_lakilaki(AhliWaris),
+            \+ada_anak_perempuan(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules ibu jika seseorang meninggal  punya anak
+hitungwaris([ibu|L],AhliWaris,[1/6|BL]) :- 
+    		(ada_anak_lakilaki(AhliWaris);
+            ada_anak_perempuan(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%KAKEK
+
+%rules kakek jika terhijab
+hitungwaris([kakek|L],AhliWaris,["Terhijab"|BL]) :- 
+    		ada_ayah(AhliWaris),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules kakek jashabah
+hitungwaris([kakek|L],AhliWaris,[1|BL]) :- 
+    		\+ ada_ayah(AhliWaris),
+                
+            ( \+ada_anak_lakilaki(AhliWaris), 
+              \+ ada_anak_perempuan(AhliWaris),
+              \+ada_cucu_lakilaki(AhliWaris),
+              \+ada_cucu_perempuan(AhliWaris)),!,
+               hitungwaris(L,AhliWaris,BL).
+
+%rules kakek jika seseraong meninggal tidak punya anak dan tidak punya ayah
+hitungwaris([kakek|L],AhliWaris,[1/3|BL]) :- 
+    		\+ ada_ayah(AhliWaris),
+           ( \+ada_anak_lakilaki(AhliWaris); 
+            \+ ada_anak_perempuan(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules kakek jika seseraong meninggal tidak punya anak dan tidak punya ayah
+hitungwaris([kakek|L],AhliWaris,[1/6|BL]) :- 
+    		 \+ ada_ayah(AhliWaris), 
+            ( ada_anak_lakilaki(AhliWaris);
+            ada_anak_perempuan(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+
+
+% NENEK DARI AYAH
+
+%%rules nenek jika terhijab
+hitungwaris([nenek|L],AhliWaris,["Terhijab"|BL]) :- ada_ibu(AhliWaris),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules nenek(dari ibu)
+hitungwaris([nenek|L],AhliWaris,[Nenek|BL]) :- 
+            (\+ada_ibu(AhliWaris); 
+            \+ada_anak_lakilaki(AhliWaris); 
+            \+ ada_anak_perempuan(AhliWaris)),!,
+    		Nenek is 1/6,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules nenek(dari ibu)
+hitungwaris([nenek|L],AhliWaris,[Nenek|BL]) :- 
+            ( \+ada_ibu(AhliWaris);
+            ada_anak_lakilaki(AhliWaris);
+            ada_anak_perempuan(AhliWaris)),!,
+    		Nenek is 1/6,
+            hitungwaris(L,AhliWaris,BL).
+
+% NENEK DARI IBU
+%%rules nenek jika terhijab
+hitungwaris([nenekdariibu|L],AhliWaris,["Terhijab"|BL]) :- ada_ibu(AhliWaris),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules nenek(dari ayah)
+hitungwaris([nenekdariibu|L],AhliWaris,[Nenek|BL]) :- 
+            (\+ada_ibu(AhliWaris); 
+            \+ada_anak_lakilaki(AhliWaris); 
+            \+ ada_anak_perempuan(AhliWaris)),!,
+    		Nenek is 1/6,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules nenek(dari ibu)
+hitungwaris([nenekdariibu|L],AhliWaris,[Nenek|BL]) :- 
+            ( \+ada_ibu(AhliWaris);
+            ada_anak_lakilaki(AhliWaris);
+            ada_anak_perempuan(AhliWaris)),!,
+    		Nenek is 1/6,
+            hitungwaris(L,AhliWaris,BL).
+
+
+%HUKUM PEMBAGIAN ISTRI DAN SUAMI
+%JIKA TIDAK PUNYA ANAK
+
+%rules suami jika tidak punya anak
+hitungwaris([suami|L],AhliWaris,[1/2|BL]) :-
+    		( \+ada_anak_lakilaki(AhliWaris),
+              \+ada_anak_perempuan(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+
+%rules suami jika  punya anak
+hitungwaris([suami|L],AhliWaris,[1/4|BL]) :- 
+   			( ada_anak_lakilaki(AhliWaris);
+            ada_anak_perempuan(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules istri tidak punya anak
+hitungwaris([istri|L],AhliWaris,[1/4|BL]) :- 
+            ( \+ada_anak_lakilaki(AhliWaris),
+            \+ada_anak_perempuan(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules istri  punya anak
+hitungwaris([istri|L],AhliWaris,[1/8|BL]) :- 
+    		( ada_anak_lakilaki(AhliWaris);
+              ada_anak_perempuan(AhliWaris)),!,
+
+        
+            hitungwaris(L,AhliWaris,BL).
+
+
+
+%ASHABAH
+
+%ANAK LAKI-LAKI
+%rules anak laki-laki kandung jika hanya seorang
+hitungwaris([anaklakilaki|L],AhliWaris,[AnakLakiLaki|BL]) :- 
+    		ada_anak_perempuan(AhliWaris),!,
+    		nb_getval(anakperempuan,AnakPerempuan),
+            write("jumlah anak laki-laki : "),
+            read(JumlahAL),
+    		(   JumlahAL = 1 ->  AnakLakiLaki is 2/3;
+            
+            	(   JumlahAL >1 ->  AnakLakiLaki is (2*AnakPerempuan)/JumlahAL
+                		)
+            		),
+ 
+            hitungwaris(L,AhliWaris,BL).
+
+
+%rules anak laki-laki kandung jika tidak memiliki anak perempuan
+hitungwaris([anaklakilaki|L],AhliWaris,[1|BL]) :- 
+    		\+ada_anak_perempuan(AhliWaris),!,
+            hitungwaris(L,AhliWaris,BL).
+
+
+% ANAK PEREMPUAN
+
+%rules anak perempuan kandung jika hanya seorang (tidak memiliki saudara lakilaki)
+hitungwaris([anakperempuan|L],AhliWaris,[1/2|BL]) :- 
+    		\+ada_anak_lakilaki(AhliWaris),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules anak perempuan kandung jika lebih dari seorang
+hitungwaris([anakperempuan|L],AhliWaris,[AnakPerempuan|BL]) :- 
+    		ada_anak_lakilaki(AhliWaris),!,
+    		write("jumlah anak perempuan : "),
+    		read(JumlahAP),
+    
+    		(   JumlahAP = 1 ->  AnakPerempuan is 1/3;
+            
+            	(   JumlahAP >1 ->  AnakPerempuan is 2/3/JumlahAP
+                		)
+            		),
+            nb_linkval(anakperempuan,AnakPerempuan),
+            hitungwaris(L,AhliWaris,BL).
+
+
+%CUCU LAKI LAKI
+%%rules cucu laki-laki jika terhijab
+hitungwaris([cuculakilaki|L],AhliWaris,["Terhijab"|BL]) :- 
+    		( ada_anak_lakilaki(AhliWaris); 
+              ada_anak_perempuan(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules cucu laki-laki kandung jika tidak ada cucu perempuan
+hitungwaris([cuculakilaki|L],AhliWaris,[1|BL]) :-
+    	( \+ada_anak_lakilaki(AhliWaris),
+            \+ada_anak_perempuan(AhliWaris),
+            \+ada_cucu_perempuan(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules cucu laki-laki kandung lebih dari seorang dan jika ada cucu perempuan 
+hitungwaris([cuculakilaki|L],AhliWaris,[CucuLakilaki|BL]) :- 
+			( \+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris),
+              ada_cucu_perempuan(AhliWaris)),!,
+    		nb_getval(cucuperempuan,CucuPerempuan),
+    		write("Jumlah cucu laki-laki :"),
+    		read(JumlahCucuL),
+       		(   JumlahCucuL = 1 ->  CucuLakilaki is 2/3;
+            
+            	(   JumlahCucuL >1 ->  CucuLakilaki is (2*CucuPerempuan)/JumlahCucuL
+                		)
+            		),
+    		
+            hitungwaris(L,AhliWaris,BL).
+
+
+%CUCU PEREMPUAN
+%rules cucu perempuan jika terhijab
+hitungwaris([cucuperempuan|L],AhliWaris,["Terhijab"|BL]) :- 
+    		( ada_anak_lakilaki(AhliWaris);
+              ada_anak_perempuan(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules cucu perempuan jika memiliki tidak cucu laki laki
+hitungwaris([cucuperempuan|L],AhliWaris,[1/2|BL]) :-  
+    		( \+ada_anak_lakilaki(AhliWaris),
+              \+ada_anak_perempuan(AhliWaris),
+              \+ada_cucu_lakilaki(AhliWaris)),!,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules cucu perempuan jika tidak memiliki cucu laki laki
+hitungwaris([cucuperempuan|L],AhliWaris,[CucuPerempuan|BL]) :-  
+    		( \+ada_anak_lakilaki(AhliWaris),
+              \+ada_anak_perempuan(AhliWaris),
+               ada_cucu_lakilaki(AhliWaris)),!,
+    		write("Jumlah cucu perempuan :"),
+    		read(JumlahCucuP),
+       		(   JumlahCucuP = 1 ->  CucuPerempuan is 1/3;
+            
+            	(   JumlahCucuP >1 ->  CucuPerempuan is 2/3/JumlahCucuP
+                		)
+            		),
+    	
+    		nb_linkval(cucuperempuan,CucuPerempuan),
+            hitungwaris(L,AhliWaris,BL).
+
+
+%HUKUM BAGIAN SAUDARA KANDUNG
+%APABILA SESEORANG MENINGGAL TIDAK MEMPUNYAI AYAH DAN TIDAK MEMPUNYAI ANAK
+
+%rules saudara kandung lakilaki jika memiliki terhijab.
+hitungwaris([saudarakandunglakilaki|L],AhliWaris,["Terhijab"|BL]) :-
+    		(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris)),!,
+    
+             hitungwaris(L,AhliWaris,BL).
+
+%rules saudara kandung perempuan terhijab
+hitungwaris([saudarakandungperempuan|L],AhliWaris,["Terhijab"|BL]) :-
+            (ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris)),!,
+    
+            hitungwaris(L,AhliWaris,BL).
+
+
+%rules saudara kandung laki laki jika tidak ada saudara kandung perempuan
+hitungwaris([saudarakandunglakilaki|L],AhliWaris,[SaudaraKandungL|BL]) :-
+            (\+ada_ayah(AhliWaris),
+             \+ada_kakek(AhliWaris),
+             (\+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris)),
+             (\+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris)),
+              \+ada_saudarakandung_perempuan(AhliWaris)),!,
+    		SaudaraKandungL is 2/3,
+    		
+            hitungwaris(L,AhliWaris,BL).
+
+%rules saudara kandung laki laki jika ada saudara kandung perempuan
+hitungwaris([saudarakandunglakilaki|L],AhliWaris,[SaudaraKandungL|BL]) :-
+            (\+ada_ayah(AhliWaris),
+             \+ada_kakek(AhliWaris),
+             (\+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris)),
+             (\+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris)),
+              ada_saudarakandung_perempuan(AhliWaris)),!,
+    	
+    		nb_getval(saudarakandungperempuan,SaudaraKandungP),
+    		write("Jumlah saudara kandung laki-laki :"),
+    		read(JumlahSKL),
+       		(   JumlahSKL = 1 ->  SaudaraKandungL is 2/3;
+            
+            	(   JumlahSKL >1 ->  SaudaraKandungL is (2*SaudaraKandungP)/JumlahSKL
+                		)
+            		),
+            hitungwaris(L,AhliWaris,BL).
+
+%rules saudara kandung perempuan jika ada saudara kandung laki laki
+hitungwaris([saudarakandungperempuan|L],AhliWaris,[SaudaraKandungP|BL]) :-
+    	 	(\+ada_ayah(AhliWaris),
+             \+ada_kakek(AhliWaris),
+             (\+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris)),
+             (\+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris)),
+              \+ada_saudarakandung_lakilaki(AhliWaris)),!,
+    			SaudaraKandungP is 1/3,
+            hitungwaris(L,AhliWaris,BL).
+
+
+%rules saudara kandung perempuan jika ada saudara kandung laki laki
+hitungwaris([saudarakandungperempuan|L],AhliWaris,[SaudaraKandungP|BL]) :-
+    	 	(\+ada_ayah(AhliWaris),
+             \+ada_kakek(AhliWaris),
+             (\+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris)),
+             (\+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris)),
+               ada_saudarakandung_lakilaki(AhliWaris)),!,
+    
+    		write("Jumlah Saudara Kandung  perempuan :"),
+    		read(JumlahSKP),
+       		(   JumlahSKP = 1 ->  SaudaraKandungP is 1/3;
+            
+            	(   JumlahSKP >1 ->  SaudaraKandungP is 2/3/JumlahSKP
+                		)
+            		),
+    	
+    		nb_linkval(saudarakandungperempuan,SaudaraKandungP),           
+            hitungwaris(L,AhliWaris,BL).
+
+
+%HUKUM BAGIAN SAUDARA SEAYAH
+%Ketika muwarits tidak punya anak,ayah,dan cucu, saudara kandung
+%rules saudara perempuan Seayah
+
+
+%rules saudara seayah lakilaki terhijab
+hitungwaris([saudaralakilakiseayah|L],AhliWaris,["Terhijab"|BL]) :-
+			(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris);
+             ada_saudarakandung_lakilaki(AhliWaris);
+             ada_saudarakandung_perempuan(AhliWaris)),!,
+    
+             hitungwaris(L,AhliWaris,BL).
+          
+
+
+%rules saudara seayah perempuan terhijab
+hitungwaris([saudaraperempuanseayah|L],AhliWaris,["Terhijab"|BL]) :-
+			(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris);
+             ada_saudarakandung_lakilaki(AhliWaris);
+             ada_saudarakandung_perempuan(AhliWaris)),!,
+    
+             hitungwaris(L,AhliWaris,BL).
+
+
+%rules saudara seayah laki-laki jika tidak ada saudara seayah perempuan
+hitungwaris([saudaraseayahlakilaki|L],AhliWaris,[SaudaraSeayahL|BL]) :-
+             (\+ada_ayah(AhliWaris),
+              \+ada_kakek(AhliWaris),
+             (\+ada_anak_lakilaki(AhliWaris);
+              \+ada_anak_perempuan(AhliWaris)),
+             (\+ada_cucu_lakilaki(AhliWaris);
+              \+ada_cucu_perempuan(AhliWaris)),
+             (\+ada_saudarakandung_lakilaki(AhliWaris);
+               \+ada_saudarakandung_perempuan(AhliWaris)),
+               \+ada_saudaraseayah_perempuan(AhliWaris)),!,
+    		SaudaraSeayahL is 2/3,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules saudara seayah laki laki jika memiliki saudara seayah perempuan
+hitungwaris([saudaraseayahlakilaki|L],AhliWaris,[SaudaraSeayahL|BL]) :-
+            (\+ada_ayah(AhliWaris),
+              \+ada_kakek(AhliWaris),
+             (\+ada_anak_lakilaki(AhliWaris);
+              \+ada_anak_perempuan(AhliWaris)),
+             (\+ada_cucu_lakilaki(AhliWaris);
+              \+ada_cucu_perempuan(AhliWaris)),
+             (\+ada_saudarakandung_lakilaki(AhliWaris);
+               \+ada_saudarakandung_perempuan(AhliWaris)),
+               ada_saudaraseayah_perempuan(AhliWaris)),!,
+    
+    		nb_getval(saudaraseayahperempuan,SaudaraSeayahP), 
+    		write("Jumlah saudara seayah laki-laki :"),
+    		read(JumlahSAL),
+       		(   JumlahSAL = 1 ->  SaudaraSeayahL is 2/3;
+            
+            	(   JumlahSAL >1 ->  SaudaraSeayahL is (2*SaudaraSeayahP)/JumlahSAL
+                		)
+            		),
+          hitungwaris(L,AhliWaris,BL).
+
+%rules saudara seayah perempuan jika ada saudara seayah laki laki
+hitungwaris([saudaraseayahperempuan|L],AhliWaris,[SaudaraSeayahP|BL]) :-
+    	 	(\+ada_ayah(AhliWaris),
+             \+ada_kakek(AhliWaris),
+             (\+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris)),
+             (\+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris)),
+              (\+ada_saudarakandung_lakilaki(AhliWaris);
+                \+ada_saudarakandung_perempuan(AhliWaris)),
+                ada_saudaraseayah_perempuan(AhliWaris)),!,
+    		SaudaraSeayahP is 1/3,
+            hitungwaris(L,AhliWaris,BL).
+
+%rules saudara seayah perempuan jika ada saudara seayah laki laki
+hitungwaris([saudaraseayahperempuan|L],AhliWaris,[SaudaraSeayahP|BL]) :-
+			 (\+ada_ayah(AhliWaris),
+             \+ada_anak_lakilaki(AhliWaris),
+             \+ada_anak_perempuan(AhliWaris),
+             \+ada_anak_perempuan(AhliWaris),
+             \+ada_cucu_lakilaki(AhliWaris),
+             \+ada_cucu_perempuan(AhliWaris),
+             \+ada_saudarakandung_lakilaki(AhliWaris),
+             \+ada_saudarakandung_perempuan(AhliWaris),
+               ada_saudaraseayah_lakilaki(AhliWaris)),!,
+    
+             write("Jumlah Saudara seayah  perempuan :"),
+    		 read(JumlahSAP),
+       		(   JumlahSAP = 1 ->  SaudaraSeayahP is 1/3;
+            
+            	(  JumlahSAP >1 ->  SaudaraSeayahP is 2/3/JumlahSAP
+                		)
+            		),
+    	
+    		nb_linkval(saudaraseayahperempuan,SaudaraSeayahP),  
+            hitungwaris(L,AhliWaris,BL).
+
+           
+
+%HUKUM BAGIAN SAUDARA SEIBU
+%APABILA SESEORANG MENINGGAL TIDAK MEMPUNYAI AYAH DAN TIDAK MEMPUNYAI ANAK
+
+%rules saudara seibu lakilaki terhijab
+hitungwaris([saudaraseibulakilaki|L],AhliWaris,["Terhijab"|BL]) :-
+			(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris);
+             ada_saudarakandung_lakilaki(AhliWaris);
+             ada_saudarakandung_perempuan(AhliWaris);
+             ada_saudaraseayah_lakilaki(AhliWaris);
+             ada_saudaraseayah_perempuan(AhliWaris)),!,
+    
+             hitungwaris(L,AhliWaris,BL).
+          
+
+
+%rules saudara seayah perempuan terhijab
+hitungwaris([saudaraseibuperempuan|L],AhliWaris,["Terhijab"|BL]) :-
+			(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris);
+             ada_saudarakandung_lakilaki(AhliWaris);
+             ada_saudarakandung_perempuan(AhliWaris);
+             ada_saudaraseayah_lakilaki(AhliWaris);
+             ada_saudaraseayah_perempuan(AhliWaris)),!,
+    
+             hitungwaris(L,AhliWaris,BL).
+
+
+%rules saudara laki-laki seibu
+hitungwaris([saudaraseibulakilaki|L],AhliWaris,[SaudaraSeibuL|BL]) :-
+            (\+ada_ayah(AhliWaris),
+             \+ada_kakek(AhliWaris),
+             \+ada_anak_lakilaki(AhliWaris),
+             \+ada_anak_perempuan(AhliWaris),
+             \+ada_anak_perempuan(AhliWaris),
+             \+ada_cucu_lakilaki(AhliWaris),
+             \+ada_cucu_perempuan(AhliWaris),
+             \+ada_saudarakandung_lakilaki(AhliWaris),
+             \+ada_saudarakandung_perempuan(AhliWaris)),!,
+    
+    		write("Jumlah Saudara seibu laki-laki :"),
+    		read(JumlahSIL),
+       		(   JumlahSIL = 1 ->  SaudaraSeibuL is 1/6;
+            
+            	(  JumlahSIL >1 ->  SaudaraSeibuL is 2/3/JumlahSIL
+                		)
+            		),
+    	
+             hitungwaris(L,AhliWaris,BL).
+
+%rules saudara perempuanseibu
+hitungwaris([saudaraseibuperempuan|L],AhliWaris,[SaudaraSeibuP|BL]) :-
+            (\+ada_ayah(AhliWaris),
+             \+ada_anak_lakilaki(AhliWaris),
+             \+ada_anak_perempuan(AhliWaris),
+             \+ada_anak_perempuan(AhliWaris),
+             \+ada_cucu_lakilaki(AhliWaris),
+             \+ada_cucu_perempuan(AhliWaris),
+             \+ada_saudarakandung_lakilaki(AhliWaris),
+             \+ada_saudarakandung_perempuan(AhliWaris)),!,
+    		write("Jumlah Saudara perempuan :"),
+    		read(JumlahSIP),
+       		(   JumlahSIP = 1 ->  SaudaraSeibuP is 1/6;
+            
+            	(  JumlahSIP >1 ->  SaudaraSeibuP is 2/3/JumlahSIP
+                		)
+            		),
+             hitungwaris(L,AhliWaris,BL).
+
+%ANAK LAKI LAKI DARI SAUDARA KANDUNG DAN SEAYAH
+
+%rules anak lakilaki dari saudara kandung laki-laki terhijab
+hitungwaris([anaklakilakidarisaudarakandung|L],AhliWaris,["Terhijab"|BL]) :-
+			(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris);
+             ada_saudarakandung_lakilaki(AhliWaris);
+             ada_saudarakandung_perempuan(AhliWaris);
+             ada_saudaraseayah_lakilaki(AhliWaris)),!,
+    
+             hitungwaris(L,AhliWaris,BL).
+             
+%rules anak lakilaki dari saudara kandung laki-laki 
+hitungwaris([anaklakilakidarisaudarakandung|L],AhliWaris,[AnakLSK|BL]) :-
+			(\+ada_ayah(AhliWaris);
+             \+ada_kakek(AhliWaris);
+             \+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris);
+             \+ada_saudarakandung_lakilaki(AhliWaris);
+             \+ada_saudarakandung_perempuan(AhliWaris);
+             \+ada_saudaraseayah_lakilaki(AhliWaris)),!,
+             
+             write("Jumlah anak laki laki dari saudara kandung :"),
+             read(JumlahLSK),
+             AnakLSK is 2/3/JumlahLSK,
+    
+             hitungwaris(L,AhliWaris,BL).
+                     
+             
+             
+
+%rules anak laki laki dari saudara laki laki seayah terhijab
+hitungwaris([anaklakilakidarisaudaraserayah|L],AhliWaris,["Terhijab"|BL]) :-
+			(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris);
+             ada_saudarakandung_lakilaki(AhliWaris);
+             ada_saudarakandung_perempuan(AhliWaris);
+             ada_saudaraseayah_lakilaki(AhliWaris);
+             ada_anaklaki_sdr_kandung(AhliWaris)),!,
+    		 hitungwaris(L,AhliWaris,BL).
+             
+%rules anak laki laki dari saudara laki laki seayah terhijab
+hitungwaris([anaklakilakidarisaudaraserayah|L],AhliWaris,[AnakLSA|BL]) :-
+			(\+ada_ayah(AhliWaris);
+             \+ada_kakek(AhliWaris);
+             \+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris);
+             \+ada_saudarakandung_lakilaki(AhliWaris);
+             \+ada_saudarakandung_perempuan(AhliWaris);
+             \+ada_saudaraseayah_lakilaki(AhliWaris)),
+             \+ada_anaklaki_sdr_kandung(AhliWaris),!,
+             
+             write("Jumlah anak laki laki dari saudara kandung :"),
+             read(JumlahALSA),
+             AnakLSA is 2/3/JumlahALSA,
+   
+             hitungwaris(L,AhliWaris,BL).
+
+%rules anak lakilaki dari saudara kandung laki-laki terhijab
+hitungwaris([anaklakilakidarisaudarakandung|L],AhliWaris,["Terhijab"|BL]) :-
+			(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris);
+             ada_saudarakandung_lakilaki(AhliWaris);
+             ada_saudarakandung_perempuan(AhliWaris);
+             ada_saudaraseayah_lakilaki(AhliWaris)),!,
+    
+             hitungwaris(L,AhliWaris,BL).
+             
+%rules anak lakilaki dari saudara kandung laki-laki 
+hitungwaris([anaklakilakidarisaudarakandung|L],AhliWaris,[AnakLSK|BL]) :-
+			(\+ada_ayah(AhliWaris);
+             \+ada_kakek(AhliWaris);
+             \+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris);
+             \+ada_saudarakandung_lakilaki(AhliWaris);
+             \+ada_saudarakandung_perempuan(AhliWaris);
+             \+ada_saudaraseayah_lakilaki(AhliWaris)),!,
+             
+             write("Jumlah anak laki laki dari saudara kandung :"),
+             read(JumlahLSK),
+             AnakLSK is 2/3/JumlahLSK,
+    
+             hitungwaris(L,AhliWaris,BL).
+                     
+             
+             
+
+%rules anak laki laki dari saudara laki laki seayah terhijab
+hitungwaris([anaklakilakidarisaudaraserayah|L],AhliWaris,["Terhijab"|BL]) :-
+			(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris);
+             ada_saudarakandung_lakilaki(AhliWaris);
+             ada_saudarakandung_perempuan(AhliWaris);
+             ada_saudaraseayah_lakilaki(AhliWaris);
+             ada_anaklaki_sdr_kandung(AhliWaris)),!,
+    		 hitungwaris(L,AhliWaris,BL).
+             
+%rules anak laki laki dari saudara laki laki seayah terhijab
+hitungwaris([anaklakilakidarisaudaraserayah|L],AhliWaris,[AnakLSA|BL]) :-
+			(\+ada_ayah(AhliWaris);
+             \+ada_kakek(AhliWaris);
+             \+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris);
+             \+ada_saudarakandung_lakilaki(AhliWaris);
+             \+ada_saudarakandung_perempuan(AhliWaris);
+             \+ada_saudaraseayah_lakilaki(AhliWaris)),
+             \+ada_anaklaki_sdr_kandung(AhliWaris),!,
+             
+             write("Jumlah anak laki laki dari saudara kandung :"),
+             read(JumlahALSA),
+             AnakLSA is 2/3/JumlahALSA,
+   
+             hitungwaris(L,AhliWaris,BL).
+
+
+%PAMANNN
+%rules paman kandung terhijab
+hitungwaris([paman|L],AhliWaris,["Terhijab"|BL]) :-
+			(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris);
+             ada_saudarakandung_lakilaki(AhliWaris);
+             ada_saudarakandung_perempuan(AhliWaris);
+             ada_saudaraseayah_lakilaki(AhliWaris);
+             ada_anaklaki_sdr_kandung(AhliWaris);
+			 ada_anaklaki_sdr_seayah(AhliWaris)),!,
+    
+             hitungwaris(L,AhliWaris,BL).
+             
+%rules paman kandung
+hitungwaris([paman|L],AhliWaris,[Paman|BL]) :-
+			(\+ada_ayah(AhliWaris);
+             \+ada_kakek(AhliWaris);
+             \+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris);
+             \+ada_saudarakandung_lakilaki(AhliWaris);
+             \+ada_saudarakandung_perempuan(AhliWaris);
+             \+ada_saudaraseayah_lakilaki(AhliWaris);
+             \+ada_saudaraseayah_lakilaki(AhliWaris);
+             \+ada_anaklaki_sdr_kandung(AhliWaris)),!,
+             
+             write("Jumlah paman :"),
+             read(JumlahPaman),
+             Paman is 1 /JumlahPaman,
+    
+             hitungwaris(L,AhliWaris,BL).
+ 
+
+%rules paman tiri terhijab
+hitungwaris([pamantiri|L],AhliWaris,["Terhijab"|BL]) :-
+			(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris);
+             ada_saudarakandung_lakilaki(AhliWaris);
+             ada_saudarakandung_perempuan(AhliWaris);
+             ada_saudaraseayah_lakilaki(AhliWaris);
+             ada_anaklaki_sdr_kandung(AhliWaris);
+			 ada_anaklaki_sdr_seayah(AhliWaris);
+             ada_paman(AhliWaris)),!,
+    		 hitungwaris(L,AhliWaris,BL).
+             
+%rules paman tiri 
+hitungwaris([pamantiri|L],AhliWaris,[PamanTiri|BL]) :-
+			(\+ada_ayah(AhliWaris);
+             \+ada_kakek(AhliWaris);
+             \+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris);
+             \+ada_saudarakandung_lakilaki(AhliWaris);
+             \+ada_saudarakandung_perempuan(AhliWaris);
+             \+ada_saudaraseayah_lakilaki(AhliWaris)),
+             \+ada_anaklaki_sdr_kandung(AhliWaris),
+    		 \+ada_saudaraseayah_lakilaki(AhliWaris),
+             \+ada_anaklaki_sdr_kandung(AhliWaris),!,
+             
+             write("Jumlah paman tiri :"),
+             read(JumlahPamanT),
+             PamanTiri is 1/JumlahPamanT,
+   
+             hitungwaris(L,AhliWaris,BL).
+
+%ANAK PAMAN DAN PAMAN TIRI
+%rules anak paman kandung terhijab
+hitungwaris([anaklakilakipaman|L],AhliWaris,["Terhijab"|BL]) :-
+			(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris);
+             ada_saudarakandung_lakilaki(AhliWaris);
+             ada_saudarakandung_perempuan(AhliWaris);
+             ada_saudaraseayah_lakilaki(AhliWaris);
+             ada_anaklaki_sdr_kandung(AhliWaris);
+			 ada_anaklaki_sdr_seayah(AhliWaris);
+             ada_paman(AhliWaris);
+             ada_paman_tiri(AhliWaris)),!,
+    
+             hitungwaris(L,AhliWaris,BL).
+             
+%rules anak paman kandung
+hitungwaris([anaklakilakipaman|L],AhliWaris,[Paman|BL]) :-
+			(\+ada_ayah(AhliWaris);
+             \+ada_kakek(AhliWaris);
+             \+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris);
+             \+ada_saudarakandung_lakilaki(AhliWaris);
+             \+ada_saudarakandung_perempuan(AhliWaris);
+             \+ada_saudaraseayah_lakilaki(AhliWaris);
+             \+ada_saudaraseayah_lakilaki(AhliWaris);
+             \+ada_anaklaki_sdr_kandung(AhliWaris);
+    		 \+ada_paman(AhliWaris);
+    		 \+ada_paman_tiri(AhliWaris)),!,
+             
+             write("Jumlah anak paman :"),
+             read(JumlahAnakPaman),
+             Paman is 1 /JumlahAnakPaman,
+    
+             hitungwaris(L,AhliWaris,BL).
+ 
+
+%rules anak lakilaki paman tiri terhijab
+hitungwaris([anaklakilakipamantiri|L],AhliWaris,["Terhijab"|BL]) :-
+			(ada_ayah(AhliWaris);
+             ada_kakek(AhliWaris);
+             ada_anak_lakilaki(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_anak_perempuan(AhliWaris);
+             ada_cucu_lakilaki(AhliWaris);
+             ada_cucu_perempuan(AhliWaris);
+             ada_saudarakandung_lakilaki(AhliWaris);
+             ada_saudarakandung_perempuan(AhliWaris);
+             ada_saudaraseayah_lakilaki(AhliWaris);
+             ada_anaklaki_sdr_kandung(AhliWaris);
+			 ada_anaklaki_sdr_seayah(AhliWaris);
+    		 ada_paman(AhliWaris);
+    		 ada_paman_tiri(AhliWaris)),!,
+    		 hitungwaris(L,AhliWaris,BL).
+             
+%rules paman tiri 
+hitungwaris([anaklakilakipamantiri|L],AhliWaris,[PamanTiri|BL]) :-
+			(\+ada_ayah(AhliWaris);
+             \+ada_kakek(AhliWaris);
+             \+ada_anak_lakilaki(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_anak_perempuan(AhliWaris);
+             \+ada_cucu_lakilaki(AhliWaris);
+             \+ada_cucu_perempuan(AhliWaris);
+             \+ada_saudarakandung_lakilaki(AhliWaris);
+             \+ada_saudarakandung_perempuan(AhliWaris);
+             \+ada_saudaraseayah_lakilaki(AhliWaris)),
+             \+ada_anaklaki_sdr_kandung(AhliWaris),
+    		 \+ada_saudaraseayah_lakilaki(AhliWaris),
+             \+ada_anaklaki_sdr_kandung(AhliWaris),
+    		 \+ada_paman(AhliWaris),
+    		 \+ada_paman_tiri(AhliWaris),!,
+             
+             write("Jumlah anak paman tiri :"),
+             read(JumlahAnakPamanT),
+             PamanTiri is 1/JumlahAnakPamanT,
+   
+             hitungwaris(L,AhliWaris,BL).
+
+%?-hitungwaris([ayah,ibu,suami,anaklakilaki,anakperempuan],X).
+
+%cheking member anak
+
+ada_anak_lakilaki(Y) :- member(anaklakilaki,Y).
+ada_anak_lakilaki(Y) :- member(anaklakilaki,Y).
+ada_anak_perempuan(Y) :- member(anakperempuan,Y).
+
+
+%cheking member cucu
+ada_cucu_lakilaki(Y) :- member(cuculakilaki,Y).
+ada_cucu_perempuan(Y) :- member(cucuperempuan,Y).
+
+%cheking member orangtua
+ada_ayah(Y) :- member(ayah,Y).
+ada_ibu(Y) :- member(ibu,Y).
+
+%cheking member kakek
+ada_kakek(Y) :- member(kakek,Y).
+
+%cheking member saudara kandung
+ada_saudarakandung_lakilaki(Y) :- member(saudarakandunglakilaki,Y).
+ada_saudarakandung_perempuan(Y) :- member(saudarakandungperempuan,Y).
+
+%cheking member saudara kandung
+ada_saudaraseayah_lakilaki(Y) :- member(saudaraseayahlakilaki,Y).
+ada_saudaraseayah_perempuan(Y) :- member(saudaraseayahperempuan,Y).
+
+%cheking member anak laki laki dari saudara kandung/seayah
+
+ada_anaklaki_sdr_kandung(Y) :- member(anaklakilakidarisaudarakandung,Y).
+ada_anaklaki_sdr_seayah(Y)	:- member(anaklakilakidarisaudaraserayah,Y).
+
+%chekng member PAMAN
+ada_paman(Y) :- member(paman,Y).
+ada_paman_tiri(Y) :- member(pamantiri,Y).
